@@ -1,4 +1,8 @@
-﻿﻿using ChessChallenge.API;
+﻿﻿// https://github.com/AnshGaikwad/Chess-World/blob/master/play.py
+// https://github.com/jw1912/Chess-Challenge/blob/nn/Chess-Challenge/src/My%20Bot/MyBot.cs#L164
+// https://web.archive.org/web/20071030084528/http://www.brucemo.com/compchess/programming/alphabeta.htm
+
+using ChessChallenge.API;
 using System;
 
 public class MyBot : IChessBot
@@ -10,7 +14,7 @@ public class MyBot : IChessBot
         Move bestMove = default;
         int iterDepth = 1;
 
-        while (iterDepth < 64 && timer.MillisecondsElapsedThisTurn < timer.MillisecondsRemaining / 30)
+        //while (iterDepth < 64 && timer.MillisecondsElapsedThisTurn < timer.MillisecondsRemaining / 30)
             Search(-30000, 30000, iterDepth++);
         
 
