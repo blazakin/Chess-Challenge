@@ -1,9 +1,12 @@
-﻿﻿// https://github.com/AnshGaikwad/Chess-World/blob/master/play.py
+﻿﻿// Resources used
+// https://github.com/AnshGaikwad/Chess-World/blob/master/play.py
 // https://github.com/jw1912/Chess-Challenge/blob/nn/Chess-Challenge/src/My%20Bot/MyBot.cs#L164
 // https://web.archive.org/web/20071030084528/http://www.brucemo.com/compchess/programming/alphabeta.htm
 
 using ChessChallenge.API;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 public class MyBot : IChessBot
 {
@@ -11,7 +14,7 @@ public class MyBot : IChessBot
     public Move Think(Board board, Timer timer)
     {   
         Move bestMove = default;
-        int iterDepth = 3;
+        int iterDepth = 1;
 
         //while (iterDepth < 64 && timer.MillisecondsElapsedThisTurn < timer.MillisecondsRemaining / 30)
             Search(-30000, 30000, iterDepth++);
@@ -91,10 +94,10 @@ public class MyBot : IChessBot
 
         int FF() {
             float[] x0 = refine();
-            float[] x = x0;
-            for(int i=0;i < W.GetLength(2); i++) {
-                x = MV_multiply(W[i],x);
-                for(int j=0;j < B[i].GetLength(0); j++){
+            List<float> x = new List<float>(x0);
+            for(int i=0;i < W.Length; i++) {
+                x = MV_multiply(W[i],x).ToList();
+                for(int j=0;j < x.Count; j++){
                     x[j] += B[i][j];
                 }
             x = Relu(x);
@@ -129,8 +132,8 @@ public class MyBot : IChessBot
             return totBoard;
         }
         
-        float[] Relu(float[] X) {
-            for (int i = 0; i < X.Length; i++) {
+        List<float> Relu(List<float> X) {
+            for (int i = 0; i < X.Count; i++) {
                 if (X[i] < 0)
                     X[i] = 0;
             }
@@ -143,11 +146,11 @@ public class MyBot : IChessBot
     }
 
 
-    float[] MV_multiply(float[,] matrix, float[] vector) {
-                float[] U = new float[matrix.GetLength(0)];
-                for(int i = 0; i < matrix.GetLength(0); i++) {
-                    for(int j = 0; j < matrix.GetLength(1); j++) {
-                        U[i] += matrix[i, j] * vector[j];
+    float[] MV_multiply(float[,] matrix, List<float> vector) {
+                float[] U = new float[matrix.GetLength(1)];
+                for(int i = 0; i < matrix.GetLength(1); i++) {
+                    for(int j = 0; j < matrix.GetLength(0); j++) {
+                        U[i] += matrix[j, i] * vector[j];
                     }
                 }
                 return U;
