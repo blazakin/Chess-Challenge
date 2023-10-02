@@ -10,9 +10,11 @@ public class MyBot : IChessBot
 
     public Move Think(Board board, Timer timer)
     {   
-        
+        float[] test = refine();
+        for(int iter = 0; iter <=11; iter++)
+            Console.WriteLine(test[iter]);
         Move bestMove = default;
-        int iterDepth = 1;
+        int iterDepth = 3;
 
         //while (iterDepth < 64 && timer.MillisecondsElapsedThisTurn < timer.MillisecondsRemaining / 30)
             Search(-30000, 30000, iterDepth++);
@@ -39,10 +41,11 @@ public class MyBot : IChessBot
             int AlphBet(int alpha, int beta, int depth)
             {
                 int bestscore = -9999;
+                var moves1 = board.GetLegalMoves(false);
                 if (depth == 0) {
                     return quiesce(alpha, beta);
                 }
-                foreach(Move move in moves) {
+                foreach(Move move in moves1) {
                     board.MakeMove(move);
                     int val = -AlphBet(-beta, -alpha, depth - 1);
                     board.UndoMove(move);
@@ -65,8 +68,8 @@ public class MyBot : IChessBot
                     return beta;
                 if (alpha < standPat)
                     alpha = standPat;
-
-                foreach (Move move in moves)
+                var moves2 = board.GetLegalMoves(false);
+                foreach (Move move in moves2)
                 {
                     if (move.IsCapture)
                     {
@@ -83,8 +86,59 @@ public class MyBot : IChessBot
             }
         }
 
+        int Evaluation2() {
+            return FF();
+        }
 
+
+
+        int FF() {
+            float[] x0 = refine();
+            float[] x = x0;
+            for(int i=0;i < W.GetLength(2); i++) {
+                x = MV_multiply(W[i],x);
+                for(int j=0;j < B[i].GetLength(0); j++){
+                    x[j] += B[i][j];
+                }
+            x = Relu(x);
+            }
+            int result = (int)(-(float)Math.Log((1/(x[0]))-1)*1000);
+            return result;
+        }
+
+        float[] refine() {
+            float[] magicNum = {1799006.86904004F, 1263811.01656626F, 1471359.55383204F, 1845698.98262769F,
+ 1338375.48563436F, 1967142.81661152F,  983261.48628797F,  572963.14041666F,
+  529013.76797665F,  342594.49390919F,  331331.47627541F,  218989.83534127F};
+            float[] totBoard = new float[12];
+            foreach(bool stm in new[] {true, false}) {
+            int num = 0;
+            for(var p = PieceType.Pawn; p <= PieceType.King; p++) {
+                float mask = board.GetPieceBitboard(p, stm);
+                if(stm)
+                totBoard[num ] = mask;
+                else
+                totBoard[num + 6] = mask;
+
+                num++;
+                }
+            }
+            for(int iter = 0; iter <=11; iter++) {
+                totBoard[iter] += 1;
+                Math.Log(totBoard[iter]);
+                totBoard[iter] /= magicNum[iter];
+                totBoard[iter] *= 1000;
+            }
+            return totBoard;
+        }
         
+        float[] Relu(float[] X) {
+            for (int i = 0; i < X.Length; i++) {
+                if (X[i] < 0)
+                    X[i] = 0;
+            }
+            return X;
+        }
 
 
         // NN eval function
@@ -138,6 +192,7 @@ public class MyBot : IChessBot
     readonly int[] raw = new int[1680];
 
     // Unpacking weights
+
     public MyBot()
     {
         int i;
@@ -160,6 +215,9 @@ public class MyBot : IChessBot
         for (; i < 6152;)
             weights[i] = raw[i++ - 4608];
     }
+
+    float[][,] W;
+    float[][] B;
 
     readonly decimal[] packedWeights = {
         37747653452566649643112200159m,40223533531119395795492272480m,36529664745230695484962498788m,38985286316542633163201559024m,
@@ -190,4 +248,14 @@ public class MyBot : IChessBot
         4912752746535941460973053830m,12281746060469715462392899535m,19630475849706118524860098581m,30712637518828842268765701974m,
         47768146784521744342789384029m,
     };
+
+    float[] MV_multiply(float[,] matrix, float[] vector) {
+                float[] U = new float[matrix.GetLength(0)];
+                for(int i = 0; i < matrix.GetLength(0); i++) {
+                    for(int j = 0; j < matrix.GetLength(1); j++) {
+                        U[i] += matrix[i, j] * vector[j];
+                    }
+                }
+                return U;
+            }
 }
