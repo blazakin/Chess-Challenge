@@ -8,16 +8,6 @@ import copy
 datafile = r"Chess_NN\data\ficsgamesdb_2012.pgn"
 
 
-# with open(datafile) as data:
-#     game = chess.pgn.read_game(data)
-#     for i in range(79):
-#         board = game.board()
-#         if game.next() is None:
-#             print(i)
-#             data.close()
-#         game.next()
-
-
 def getxFENS(num_FENS):
     with open(datafile) as data:
         game = chess.pgn.read_game(data)
@@ -111,3 +101,8 @@ def BBandEval(num_games, time_per_board=0.01):
         outputs = np.asarray(outputs)
         engine.quit()
     return inputs, outputs
+
+
+boardstates, evals = BBandEval(1000)
+np.save(r"Chess_NN\data\boardstates.npy", boardstates)
+np.save(r"Chess_NN\data\evals.npy", boardstates)
