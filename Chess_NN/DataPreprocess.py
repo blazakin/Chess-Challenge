@@ -104,5 +104,5 @@ def BBandEval(num_games, time_per_board=0.01):
 
 
 boardstates, evals = BBandEval(1000)
-np.save(r"Chess_NN\data\boardstates.npy", boardstates)
-np.save(r"Chess_NN\data\evals.npy", boardstates)
+np.save(r"Chess_NN\data\DataSet\boardstates.npy", boardstates)
+np.save(r"Chess_NN\data\DataSet\evals.npy", evals)
