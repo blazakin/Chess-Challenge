@@ -14,72 +14,91 @@ public class MyBot : IChessBot {
         Move bestMove = default;
         int iterDepth = 3;
 
-        //while (iterDepth < 64 && timer.MillisecondsElapsedThisTurn < timer.MillisecondsRemaining / 30)
-            Search(-30000, 30000, iterDepth++);
+        // Iterative deepening to a max depth of 64 and ensure enough time for future moves
+        while (iterDepth < 64 && timer.MillisecondsElapsedThisTurn < timer.MillisecondsRemaining / 30) {
+            if(iterDepth == 63) {
+                Console.WriteLine("Error: search not working");
+            }
+            bestMove = Search(-30000, -30000, iterDepth++);
+        }
         
 
         return bestMove;
 
-        void Search(int alpha, int beta, int depth) {
+        // Main function to search for the best possible move
+        Move Search(int alpha, int beta, int depth) {
             int bestValue = -30000;
             var moves = board.GetLegalMoves(false);
+            // Console.WriteLine(moves[0]);
+            Move curBestMove = moves[0];
+
+            // Choose best move from available moves
             foreach (Move move in moves) {
                 board.MakeMove(move);
                 var boardValue = -AlphBet(-beta, -alpha, depth - 1);
+                board.UndoMove(move);
                 if (boardValue > bestValue) {
                     bestValue = boardValue;
-                    bestMove = move;
+                    curBestMove = move;
                 }
                 if (boardValue > alpha) {
                     alpha = boardValue;
                 }
-                board.UndoMove(move);
             }
-
-            int AlphBet(int alpha, int beta, int depth) {
-                int bestscore = -9999;
-                var moves1 = board.GetLegalMoves(false);
-                if (depth == 0) {
-                    return quiesce(alpha, beta);
-                }
-                foreach(Move move in moves1) {
-                    board.MakeMove(move);
-                    int val = -AlphBet(-beta, -alpha, depth - 1);
-                    board.UndoMove(move);
-                    if (val >= beta) {
-                        return val;
-                    }
-                    if (val > bestscore) {
-                        bestscore = val;
-                    }
-                    if (val > alpha) {
-                        alpha = val;
-                    }
-                } 
-            return alpha;
-            }
-
-            int quiesce(int alpha, int beta) {
-                int standPat = Evaluate();
-                if (standPat >= beta)
-                    return beta;
-                if (alpha < standPat)
-                    alpha = standPat;
-                var moves2 = board.GetLegalMoves(false);
-                foreach (Move move in moves2) {
-                    if (move.IsCapture) {
-                        board.MakeMove(move);
-                        int score = -quiesce(-beta, -alpha);
-                        board.UndoMove(move);
-                        if (score >= beta)
-                            return beta;
-                        if (score > alpha)
-                            alpha = score;
-                    }
-                }
-                return alpha;
-            }
+            return curBestMove;
         }
+
+        int AlphBet(int alpha, int beta, int depth) {
+            int bestscore = -9999;
+            var moves = board.GetLegalMoves(false);
+            if (depth == 0) {
+                return quiesce(alpha, beta);
+            }
+            foreach(Move move in moves) {
+                board.MakeMove(move);
+                int val = -AlphBet(-beta, -alpha, depth - 1);
+                board.UndoMove(move);
+                if (val >= beta) {
+                    return val;
+                }
+                if (val > bestscore) {
+                    bestscore = val;
+                }
+                if (val > alpha) {
+                    alpha = val;
+                }
+            } 
+        return alpha;
+        }
+
+        int quiesce(int alpha, int beta) {
+            int standPat = Evaluate();
+            if (standPat >= beta)
+                return beta;
+            if (alpha < standPat)
+                alpha = standPat;
+            var moves2 = board.GetLegalMoves(false);
+            foreach (Move move in moves2) {
+                if (move.IsCapture) {
+                    board.MakeMove(move);
+                    int score = -quiesce(-beta, -alpha);
+                    board.UndoMove(move);
+                    if (score >= beta)
+                        return beta;
+                    if (score > alpha)
+                        alpha = score;
+                }
+            }
+            return alpha;
+        }
+
+
+
+        // Evaluation Function --------------------------------------------
+
+
+
+
 
         // Evaluation Feed Forward NN
         int Evaluate() {
