@@ -1,8 +1,9 @@
+import os
 import chess
 import chess.pgn
 import chess.engine
 import numpy as np
-import copy
+from npy_append_array import NpyAppendArray
 
 # 46132506 lines/boards
 datafile = r"Chess_NN\data\ficsgamesdb_2012.pgn"
@@ -59,7 +60,7 @@ def board_to_BB(board):
                               board.has_queenside_castling_rights(chess.BLACK)
                               ])).astype(np.int8)
 
-    # Put pieces to move as normal "white" position
+    # Put pieces with repsect ot player to move as normal "white" position
     if board.turn:
         return np.concatenate((np.concatenate((w_pawn, w_rook, w_knight, w_bishop, w_queen, w_king,
                                b_pawn, b_rook, b_knight, b_bishop, b_queen, b_king)).ravel(), w_castling, b_castling))
@@ -68,11 +69,13 @@ def board_to_BB(board):
                                w_pawn[::-1], w_rook[::-1], w_knight[::-1], w_bishop[::-1], w_queen[::-1], w_king[::-1])).ravel(), b_castling, w_castling))
 
 
+# Converts chess piece board to np array with 1s where the piece type is and 0s everywhere else
 def _piece_to_np(piece, color, board):
     return np.reshape((np.asarray(board.pieces(
         piece, color).tolist())).astype(np.int8), (8, 8))
 
 
+# Example of stockfish evaluations of board state
 def stockfish_evaluation(board, time_limit=0.01):
     engine = chess.engine.SimpleEngine.popen_uci(
         r"Chess_NN\stockfish\stockfish-windows-x86-64-avx2.exe")
@@ -81,28 +84,48 @@ def stockfish_evaluation(board, time_limit=0.01):
     return result['score'].relative.score(mate_score=100000)
 
 
-def BBandEval(num_games, time_per_board=0.01):
+def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
+    # Create valid file paths for processed data files
+    boardstates_file = os.path.join(data_dir, "boardstates.npy")
+    evals_file = os.path.join(data_dir, "evals.npy")
+
+    # Open pgn datafile
     with open(datafile) as data:
         game = chess.pgn.read_game(data)
-        engine = chess.engine.SimpleEngine.popen_uci(
-            r"Chess_NN\stockfish\stockfish-windows-x86-64-avx2.exe")
-        inputs = []
-        outputs = []
-        for i in range(num_games):
-            inputs.append(board_to_BB(copy.deepcopy(game.board())))
-            eval = engine.analyse(
-                copy.deepcopy(game.board()), chess.engine.Limit(time=time_per_board))
 
-            # Output should already be relative to current player
-            outputs.append(eval['score'].relative.score(mate_score=100000))
+        # Get to correct starting point in pgn
+        for _ in range(start):
             game.next()
 
-        inputs = np.asarray(inputs)
-        outputs = np.asarray(outputs)
+        # Start up evaluation to train to
+        engine = chess.engine.SimpleEngine.popen_uci(
+            r"Chess_NN\stockfish\stockfish-windows-x86-64-avx2.exe")
+
+        with (NpyAppendArray(boardstates_file, delete_if_exists=not append) as boardstates_npy,
+              NpyAppendArray(evals_file, delete_if_exists=not append) as evals_npy):
+            for i in range(end-start):
+                # saved as int8s, need to be converted to float 32 when read
+                boardstates_npy.append(np.asarray([board_to_BB(
+                    game.board())]))
+                eval = engine.analyse(
+                    game.board(), chess.engine.Limit(time=time_per_board))
+
+                # Output should already be relative to current player
+                evals_npy.append(np.asarray([[eval['score'].relative.score(
+                    mate_score=100)/100]]).astype(np.float32))
+
+                if i % ((start-end)/10) == 0:
+                    print(i)
+                game.next()
         engine.quit()
-    return inputs, outputs
 
 
-boardstates, evals = BBandEval(1000)
-np.save(r"Chess_NN\data\DataSet\boardstates.npy", boardstates)
-np.save(r"Chess_NN\data\DataSet\evals.npy", evals)
+BBandEval(
+    start=0,
+    end=1000,
+    data_dir=r"Chess_NN\data\DataSet",
+    append=False
+)
+
+# np.save(r"Chess_NN\data\DataSet\boardstates.npy", boardstates)
+# np.save(r"Chess_NN\data\DataSet\evals.npy", evals)
