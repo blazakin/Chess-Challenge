@@ -134,8 +134,7 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
         engine = chess.engine.SimpleEngine.popen_uci(
             r"Chess_NN\stockfish\stockfish-windows-x86-64-avx2.exe")
 
-        with (NpyAppendArray(boardstates_file, delete_if_exists=not append) as boardstates_npy,
-              NpyAppendArray(evals_file, delete_if_exists=not append) as evals_npy):
+        with (NpyAppendArray(boardstates_file, delete_if_exists=not append) as boardstates_npy, NpyAppendArray(evals_file, delete_if_exists=not append) as evals_npy):
             for i in range(end-start):
                 # saved as int8s, need to be converted to float 32 when read
                 boardstates_npy.append(np.asarray([board_to_BB(
@@ -156,7 +155,7 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
 
 BBandEval(
     start=0,
-    end=2000000,
+    end=1000,
     data_dir=r"Chess_NN\data\DataSet",
     append=False
 )
