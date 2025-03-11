@@ -133,8 +133,8 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
             game.next()
 
         # Start up evaluation to train to
-        engine = chess.engine.SimpleEngine.popen_uci(
-            r"Chess_NN\stockfish\stockfish-windows-x86-64-avx2.exe")
+        engine = chess.engine.SimpleEngine.popen_uci(os.path.join(
+            "Chess_NN", "stockfish", "stockfish-windows-x86-64-avx2.exe"))
 
         with (NpyAppendArray(boardstates_file, delete_if_exists=not append) as boardstates_npy, NpyAppendArray(evals_file, delete_if_exists=not append) as evals_npy):
             for i in range(end-start):
