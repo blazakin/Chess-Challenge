@@ -106,7 +106,7 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
 
 BBandEval(
     start=0,
-    end=1000,
+    end=2000000,
     data_dir=r"Chess_NN\data\DataSet",
     append=False
 )
