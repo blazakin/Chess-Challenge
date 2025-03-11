@@ -10,7 +10,7 @@ from npy_append_array import NpyAppendArray
 # Data sourced from https://www.ficsgames.org/download.html
 # Used "Standard (all ratings)" for all year 2012, not including move times
 # 46132506 lines/boards
-datafile = r"Chess_NN\data\ficsgamesdb_2012.pgn"
+datafile = os.path.join("Chess_NN", "data", "ficsgamesdb_2012.pgn")
 
 
 def board_to_BB(board):
