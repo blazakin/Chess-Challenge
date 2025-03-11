@@ -126,4 +126,4 @@ for t in range(epochs):
 print("Done!")
 
 
-torch.save(model.state_dict(), 'model_weights.pth')
+torch.save(model.state_dict(), r"Chess_NN\weights\model_weights.pth")
