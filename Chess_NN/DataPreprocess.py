@@ -25,7 +25,6 @@ def board_to_BB(board):
     b_bishop = _piece_to_np(chess.BISHOP, chess.BLACK, board)
     b_queen = _piece_to_np(chess.QUEEN, chess.BLACK, board)
     b_king = _piece_to_np(chess.KING, chess.BLACK, board)
-    # print(w_king)
 
     w_castling = (np.asarray([board.has_kingside_castling_rights(chess.WHITE),
                               board.has_queenside_castling_rights(chess.WHITE)
@@ -36,6 +35,7 @@ def board_to_BB(board):
                               ])).astype(np.int8)
 
     # Put pieces with repsect to player to move as normal "white" position
+    # Where white starts on bottom
     if board.turn:
         return np.concatenate((np.concatenate((w_pawn, w_rook, w_knight, w_bishop, w_queen, w_king,
                                b_pawn, b_rook, b_knight, b_bishop, b_queen, b_king)).ravel(), w_castling, b_castling))
@@ -49,7 +49,13 @@ def _piece_to_np(piece, color, board):
     return np.reshape((np.asarray(board.pieces(piece, color).tolist())).astype(np.int8), (8, 8))[::-1]
 
 
-def board_to_BB2(board):
+# Needs testing to see if it's faster
+# Code adabpted from
+# https://chess.stackexchange.com/questions/29294/quickly-converting-board-to-bitboard-representation-using-python-chess-library
+def board_to_BB_test(board):
+    # Arranges data player to move on bottom for each bitboard
+    # then player to move castling availability
+    # then other player castling availability
     black, white = board.occupied_co
     w_bitboards = np.array([
         white & board.pawns,
@@ -82,6 +88,7 @@ def board_to_BB2(board):
     w_board_array = bitboards_to_array(w_bitboards)
     b_board_array = bitboards_to_array(b_bitboards)
 
+    # true if white turn to move
     if board.turn:
         return np.concatenate((w_board_array.ravel(), b_board_array.ravel(), w_castling, b_castling))
     else:
@@ -131,7 +138,7 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
               NpyAppendArray(evals_file, delete_if_exists=not append) as evals_npy):
             for i in range(end-start):
                 # saved as int8s, need to be converted to float 32 when read
-                boardstates_npy.append(np.asarray([board_to_BB2(
+                boardstates_npy.append(np.asarray([board_to_BB(
                     game.board())]))
                 eval = engine.analyse(
                     game.board(), chess.engine.Limit(time=time_per_board))
@@ -149,7 +156,7 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
 
 BBandEval(
     start=0,
-    end=1000,
+    end=2000000,
     data_dir=r"Chess_NN\data\DataSet",
     append=False
 )
