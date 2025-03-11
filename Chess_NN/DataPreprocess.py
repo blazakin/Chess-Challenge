@@ -141,25 +141,27 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
         # Start up evaluation to train to
         engine = chess.engine.SimpleEngine.popen_uci(engine_file)
 
-        with (NpyAppendArray(boardstates_file, delete_if_exists=not append) as boardstates_npy, NpyAppendArray(evals_file, delete_if_exists=not append) as evals_npy):
-            for i in range(end-start):
-                # saved as int8s, need to be converted to float 32 when read
-                boardstates_npy.append(np.asarray([board_to_BB(
-                    game.board())]))
-                eval = engine.analyse(
-                    game.board(), chess.engine.Limit(time=time_per_board))
+        with NpyAppendArray(boardstates_file, delete_if_exists=not append) as boardstates_npy:
+            with NpyAppendArray(evals_file, delete_if_exists=not append) as evals_npy:
+                for i in range(end-start):
+                    # saved as int8s, need to be converted to float 32 when read
+                    boardstates_npy.append(np.asarray([board_to_BB(
+                        game.board())]))
+                    eval = engine.analyse(
+                        game.board(), chess.engine.Limit(time=time_per_board))
 
-                # Output should already be relative to current player
-                evals_npy.append(np.asarray([[eval['score'].relative.score(
-                    mate_score=100)/100]]).astype(np.float32))
+                    # Output should already be relative to current player
+                    evals_npy.append(np.asarray([[eval['score'].relative.score(
+                        mate_score=100)/100]]).astype(np.float32))
 
-                if i % ((start-end)/10) == 0:
-                    pass
-                    print(i)
-                game.next()
+                    if i % ((start-end)/10) == 0:
+                        pass
+                        print(i)
+                    game.next()
         engine.quit()
 
 
+dataset_file = os.path.join("Chess_NN", "data", "DataSet")
 BBandEval(
     start=0,
     end=1000,
