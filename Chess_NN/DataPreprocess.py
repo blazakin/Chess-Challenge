@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+from sys import platform
 import chess
 import chess.pgn
 import chess.engine
@@ -10,6 +11,12 @@ from npy_append_array import NpyAppendArray
 # Data sourced from https://www.ficsgames.org/download.html
 # Used "Standard (all ratings)" for all year 2012, not including move times
 # 46132506 lines/boards
+if platform == "win32":
+    engine_file = os.path.join(
+        "Chess_NN", "stockfish", "stockfish-windows-x86-64-avx2.exe")
+else:
+    engine_file = os.path.join(
+        "Chess_NN", "stockfish", "stockfish_linux", "stockfish-ubuntu-x86-64-avx2")
 datafile = os.path.join("Chess_NN", "data", "ficsgamesdb_2012.pgn")
 
 
@@ -111,8 +118,7 @@ def bitboards_to_array(bb):
 
 # Example of stockfish evaluations of board state
 def stockfish_evaluation(board, time_limit=0.01):
-    engine = chess.engine.SimpleEngine.popen_uci(os.path.join(
-        "Chess_NN", "stockfish", "stockfish-windows-x86-64-avx2.exe"))
+    engine = chess.engine.SimpleEngine.popen_uci(engine_file)
     result = engine.analyse(board, chess.engine.Limit(time=time_limit))
     engine.quit()
     return result['score'].relative.score(mate_score=100000)
@@ -133,8 +139,7 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
             game.next()
 
         # Start up evaluation to train to
-        engine = chess.engine.SimpleEngine.popen_uci(os.path.join(
-            "Chess_NN", "stockfish", "stockfish-windows-x86-64-avx2.exe"))
+        engine = chess.engine.SimpleEngine.popen_uci(engine_file)
 
         with (NpyAppendArray(boardstates_file, delete_if_exists=not append) as boardstates_npy, NpyAppendArray(evals_file, delete_if_exists=not append) as evals_npy):
             for i in range(end-start):
