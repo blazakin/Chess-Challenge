@@ -21,16 +21,6 @@ class ChessDataSet(Dataset):
         self.train = train
         self.transform = transform
         self.target_transform = target_transform
-        # if self.train:
-        #     self.boardstates = self.boardstates[:math.floor(
-        #         len(self.boardstates)*.95)]
-        #     self.evals = self.evals[:math.floor(
-        #         len(self.evals)*.95)]
-        # else:
-        #     self.boardstates = self.boardstates[:math.ceil(
-        #         len(self.boardstates)*.05)]
-        #     self.evals = self.evals[:math.ceil(
-        #         len(self.evals)*.05)]
 
     def __len__(self):
         if self.train:
@@ -44,7 +34,7 @@ class ChessDataSet(Dataset):
             idx = idx + math.floor(self.evals.shape[0]*.95)
 
         # Ensures training objects cannot access testing data
-        elif idx > math.floor(self.evals.shape[0]*.95) - 1:
+        elif idx >= math.floor(self.evals.shape[0]*.95):
             raise IndexError("list index out of range")
 
         boardstate = self.boardstates[idx].astype(np.float32)

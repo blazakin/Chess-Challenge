@@ -5,28 +5,10 @@ import chess.engine
 import numpy as np
 from npy_append_array import NpyAppendArray
 
+# Data sourced from https://www.ficsgames.org/download.html
+# Used "Standard (all ratings)" for all year 2012, not including move times
 # 46132506 lines/boards
 datafile = r"Chess_NN\data\ficsgamesdb_2012.pgn"
-
-
-def getxFENS(num_FENS):
-    with open(datafile) as data:
-        game = chess.pgn.read_game(data)
-        result = []
-        for i in range(num_FENS):
-            result.append(game.board().fen())
-            game.next()
-    return result
-
-
-def getxBB(num_FENS):
-    with open(datafile) as data:
-        game = chess.pgn.read_game(data)
-        result = []
-        for _ in range(num_FENS):
-            result.append(board_to_BB(game.board()))
-            game.next()
-    return np.asarray(result)
 
 
 def board_to_BB(board):
@@ -84,6 +66,7 @@ def stockfish_evaluation(board, time_limit=0.01):
     return result['score'].relative.score(mate_score=100000)
 
 
+# Start to end-1 inclusive for indexing 0,1,2,...
 def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
     # Create valid file paths for processed data files
     boardstates_file = os.path.join(data_dir, "boardstates.npy")
@@ -115,6 +98,7 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
                     mate_score=100)/100]]).astype(np.float32))
 
                 if i % ((start-end)/10) == 0:
+                    pass
                     print(i)
                 game.next()
         engine.quit()
@@ -126,6 +110,3 @@ BBandEval(
     data_dir=r"Chess_NN\data\DataSet",
     append=False
 )
-
-# np.save(r"Chess_NN\data\DataSet\boardstates.npy", boardstates)
-# np.save(r"Chess_NN\data\DataSet\evals.npy", evals)
