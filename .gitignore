@@ -1,7 +1,7 @@
 # Ignored directories
 Chess_NN/__pycache__/
-Chess_NN/stockfish/
-Chess_NN/data/
+Chess_NN/stockfish/*
+Chess_NN/data/*
 
 # Model weights files
 *.pth
