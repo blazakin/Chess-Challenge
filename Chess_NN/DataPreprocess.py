@@ -111,8 +111,8 @@ def bitboards_to_array(bb):
 
 # Example of stockfish evaluations of board state
 def stockfish_evaluation(board, time_limit=0.01):
-    engine = chess.engine.SimpleEngine.popen_uci(
-        r"Chess_NN\stockfish\stockfish-windows-x86-64-avx2.exe")
+    engine = chess.engine.SimpleEngine.popen_uci(os.path.join(
+        "Chess_NN", "stockfish", "stockfish-windows-x86-64-avx2.exe"))
     result = engine.analyse(board, chess.engine.Limit(time=time_limit))
     engine.quit()
     return result['score'].relative.score(mate_score=100000)
