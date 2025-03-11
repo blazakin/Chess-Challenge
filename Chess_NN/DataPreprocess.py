@@ -25,14 +25,7 @@ def board_to_BB(board):
     b_bishop = _piece_to_np(chess.BISHOP, chess.BLACK, board)
     b_queen = _piece_to_np(chess.QUEEN, chess.BLACK, board)
     b_king = _piece_to_np(chess.KING, chess.BLACK, board)
-
-    # legal_moves = board.legal_moves
-    # legal_board = [[0 for _ in range(8)] for _ in range(8)]
-    # for move in legal_moves:
-    #     square = move.to_square
-    #     row, col = divmod(square, 8)
-    #     legal_board[row][col] = 1
-    # legal_board = np.asarray(legal_board[::-1]).astype(np.int8)
+    # print(w_king)
 
     w_castling = (np.asarray([board.has_kingside_castling_rights(chess.WHITE),
                               board.has_queenside_castling_rights(chess.WHITE)
@@ -42,7 +35,7 @@ def board_to_BB(board):
                               board.has_queenside_castling_rights(chess.BLACK)
                               ])).astype(np.int8)
 
-    # Put pieces with repsect ot player to move as normal "white" position
+    # Put pieces with repsect to player to move as normal "white" position
     if board.turn:
         return np.concatenate((np.concatenate((w_pawn, w_rook, w_knight, w_bishop, w_queen, w_king,
                                b_pawn, b_rook, b_knight, b_bishop, b_queen, b_king)).ravel(), w_castling, b_castling))
@@ -53,8 +46,58 @@ def board_to_BB(board):
 
 # Converts chess piece board to np array with 1s where the piece type is and 0s everywhere else
 def _piece_to_np(piece, color, board):
-    return np.reshape((np.asarray(board.pieces(
-        piece, color).tolist())).astype(np.int8), (8, 8))
+    return np.reshape((np.asarray(board.pieces(piece, color).tolist())).astype(np.int8), (8, 8))[::-1]
+
+
+def board_to_BB2(board):
+    black, white = board.occupied_co
+    w_bitboards = np.array([
+        white & board.pawns,
+        white & board.rooks,
+        white & board.knights,
+        white & board.bishops,
+        white & board.queens,
+        white & board.kings
+    ], dtype=np.uint64)
+
+    b_bitboards = np.array([
+        black & board.pawns,
+        black & board.rooks,
+        black & board.knights,
+        black & board.bishops,
+        black & board.queens,
+        black & board.kings
+    ], dtype=np.uint64)
+
+    w_castling = np.array([
+        board.has_kingside_castling_rights(chess.WHITE),
+        board.has_queenside_castling_rights(chess.WHITE)
+    ], dtype=np.int8)
+
+    b_castling = np.array([
+        board.has_kingside_castling_rights(chess.BLACK),
+        board.has_queenside_castling_rights(chess.BLACK)
+    ], dtype=np.int8)
+
+    w_board_array = bitboards_to_array(w_bitboards)
+    b_board_array = bitboards_to_array(b_bitboards)
+
+    if board.turn:
+        return np.concatenate((w_board_array.ravel(), b_board_array.ravel(), w_castling, b_castling))
+    else:
+        return np.concatenate(([pieces[::-1] for pieces in b_board_array].ravel(),
+                               [pieces[::-1]
+                                   for pieces in w_board_array].ravel(),
+                               b_castling,
+                               w_castling))
+
+
+def bitboards_to_array(bb):
+    bb = np.asarray(bb, dtype=np.uint64)[:, np.newaxis]
+    s = 8 * np.arange(7, -1, -1, dtype=np.uint64)
+    b = (bb >> s).astype(np.uint8)
+    b = np.unpackbits(b, bitorder="little")
+    return b.reshape(-1, 8, 8).astype(np.int8)
 
 
 # Example of stockfish evaluations of board state
@@ -88,7 +131,7 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
               NpyAppendArray(evals_file, delete_if_exists=not append) as evals_npy):
             for i in range(end-start):
                 # saved as int8s, need to be converted to float 32 when read
-                boardstates_npy.append(np.asarray([board_to_BB(
+                boardstates_npy.append(np.asarray([board_to_BB2(
                     game.board())]))
                 eval = engine.analyse(
                     game.board(), chess.engine.Limit(time=time_per_board))
@@ -106,7 +149,7 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
 
 BBandEval(
     start=0,
-    end=2000000,
+    end=1000,
     data_dir=r"Chess_NN\data\DataSet",
     append=False
 )
