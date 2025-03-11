@@ -3,5 +3,8 @@ Chess_NN/__pycache__/
 Chess_NN/stockfish/*
 Chess_NN/data/*
 
+# Don't ignore readme files
+!*README.md
+
 # Model weights files
 *.pth
