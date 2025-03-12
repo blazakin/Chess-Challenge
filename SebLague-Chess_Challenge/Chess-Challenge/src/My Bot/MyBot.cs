@@ -16,11 +16,9 @@ public class MyBot : IChessBot {
 
         // Iterative deepening to a max depth of 64 and ensure enough time for future moves
         while (iterDepth < 64 && timer.MillisecondsElapsedThisTurn < timer.MillisecondsRemaining / 30) {
-            if(iterDepth == 63) {
-                Console.WriteLine("Error: search not working");
-            }
             bestMove = Search(-30000, 30000, iterDepth++);
         }
+        Console.WriteLine(iterDepth);
         
 
         return bestMove;
@@ -54,7 +52,7 @@ public class MyBot : IChessBot {
         int AlphBet(int alpha, int beta, int depth) {
             int bestscore = -30000;
             var moves = board.GetLegalMoves(false);
-            if (depth == 0) {
+            if (depth == 0 || timer.MillisecondsElapsedThisTurn >= timer.MillisecondsRemaining / 15) {
                 return quiesce(alpha, beta);
             }
             foreach(Move move in moves) {
