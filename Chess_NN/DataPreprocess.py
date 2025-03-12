@@ -11,13 +11,17 @@ from npy_append_array import NpyAppendArray
 # Data sourced from https://www.ficsgames.org/download.html
 # Used "Standard (all ratings)" for all year 2012, not including move times
 # 46132506 lines/boards
+
+dirname = os.path.dirname(__file__)
+
 if platform == "win32":
     engine_file = os.path.join(
-        "Chess_NN", "stockfish", "stockfish-windows-x86-64-avx2.exe")
+        dirname, "stockfish", "stockfish-windows-x86-64-avx2.exe")
 else:
     engine_file = os.path.join(
-        "Chess_NN", "stockfish", "stockfish_linux", "stockfish-ubuntu-x86-64-avx2")
-datafile = os.path.join("Chess_NN", "data", "ficsgamesdb_2012.pgn")
+        dirname, "stockfish", "stockfish_linux", "stockfish-ubuntu-x86-64-avx2")
+
+datafile = os.path.join(dirname, "data", "ficsgamesdb_2012.pgn")
 
 
 def board_to_BB(board):
@@ -161,10 +165,10 @@ def BBandEval(*, start=0, end, data_dir, append, time_per_board=0.01):
         engine.quit()
 
 
-dataset_file = os.path.join("Chess_NN", "data", "DataSet")
+dataset_file = os.path.join(dirname, "data", "DataSet")
 BBandEval(
     start=0,
     end=1000,
-    data_dir=r"Chess_NN\data\DataSet",
+    data_dir=dataset_file,
     append=False
 )

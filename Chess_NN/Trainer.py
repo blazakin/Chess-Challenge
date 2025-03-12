@@ -1,3 +1,4 @@
+import os
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -93,15 +94,18 @@ def test_loop(dataloader, model, loss_fn):
         f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Inaccuracy: {(100*incorrect):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
 
+dirname = os.path.dirname(__file__)
+dataset_filepath = os.path.join(dirname, "data", "DataSet")
+
 training_data = ChessDataSet.ChessDataSet(
-    root=r".\Chess_NN\data\DataSet",
+    root=dataset_filepath,
     train=True,
     transform=torch.from_numpy,
     target_transform=torch.from_numpy
 )
 
 test_data = ChessDataSet.ChessDataSet(
-    root=r".\Chess_NN\data\DataSet",
+    root=dataset_filepath,
     train=False,
     transform=torch.from_numpy,
     target_transform=torch.from_numpy
@@ -125,5 +129,5 @@ for t in range(epochs):
     test_loop(test_dataloader, model, loss_fn)
 print("Done!")
 
-
-torch.save(model.state_dict(), r"Chess_NN\weights\model_weights.pth")
+model_file = os.path.join(dirname, "weights", "model_weights.pth")
+torch.save(model.state_dict(), model_file)

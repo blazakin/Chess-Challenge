@@ -8,3 +8,6 @@ Chess_NN/data/*
 
 # Model weights files
 *.pth
+
+# Ignore environments
+*_env/
